@@ -217,6 +217,17 @@
 </svg>
 </a>
 
-<script src="script.js"></script>
+<script>
+/* بدء تحميل كل الصور والفيديوهات فور اكتمال قراءة الصفحة. */
+document.querySelectorAll('img[loading="lazy"]').forEach(function (image) {
+  image.loading = 'eager';
+});
+
+document.querySelectorAll('video').forEach(function (video) {
+  video.preload = 'auto';
+  video.load();
+});
+</script>
+<script src="script.js" defer></script>
 </body>
 </html>
