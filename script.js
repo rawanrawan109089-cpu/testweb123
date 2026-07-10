@@ -35,7 +35,16 @@
   function close(){ overlay.classList.remove('open'); overlay.classList.remove('hide-next'); overlay.classList.remove('flex-travel'); overlay.classList.remove('hide-arrows'); overlay.classList.remove('fit-visual'); overlay.setAttribute('aria-hidden','true'); document.body.style.overflow=''; stage.innerHTML=''; }
   function go(d){ if(!items.length) return; index=(index+d+items.length)%items.length; render(); }
   document.querySelectorAll('[data-case]').forEach(box=>{
-    box.querySelectorAll('[data-open-media]').forEach(el=>{ el.addEventListener('click',e=>{ const media=e.target.closest('.gallery-media') || el.querySelector('.gallery-media'); open(box,media); }); });
+    box.querySelectorAll('[data-open-media]').forEach(el=>{
+      // بطاقات الفيديو تعمل داخل الصفحة ولا تدخل إلى عارض الصور.
+      if(el.querySelector('video')) return;
+
+      el.addEventListener('click',e=>{
+        const media=e.target.closest('.gallery-media') || el.querySelector('.gallery-media');
+        if(!media) return;
+        open(box,media);
+      });
+    });
     box.querySelectorAll('[data-open-case]').forEach(btn=>btn.addEventListener('click',()=>open(box)));
   });
   closeBtn.addEventListener('click',close); prevBtn.addEventListener('click',()=>go(-1)); nextBtn.addEventListener('click',()=>go(1)); overlay.addEventListener('click',e=>{ if(e.target===overlay) close(); });
