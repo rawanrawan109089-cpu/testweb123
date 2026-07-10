@@ -1,4 +1,4 @@
-(function(){
+﻿(function(){
   const overlay=document.getElementById('lightbox');
   const stage=overlay.querySelector('.light-stage');
   const title=overlay.querySelector('.light-title');
@@ -40,6 +40,68 @@
   });
   closeBtn.addEventListener('click',close); prevBtn.addEventListener('click',()=>go(-1)); nextBtn.addEventListener('click',()=>go(1)); overlay.addEventListener('click',e=>{ if(e.target===overlay) close(); });
   document.addEventListener('keydown',e=>{ if(!overlay.classList.contains('open')) return; if(e.key==='Escape') close(); if(e.key==='ArrowRight') go(-1); if(e.key==='ArrowLeft') go(1); });
+})();
+
+/* إيقاف الفيديو السابق عند تشغيل فيديو آخر، وإيقاف الفيديو عند الخروج من الشاشة */
+(function(){
+  const managedVideos = new WeakSet();
+
+  function pauseOtherVideos(activeVideo){
+    document.querySelectorAll('video').forEach(function(video){
+      if(video !== activeVideo && !video.paused){
+        video.pause();
+      }
+    });
+  }
+
+  const visibilityObserver = 'IntersectionObserver' in window
+    ? new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){
+          if(!entry.isIntersecting || entry.intersectionRatio < 0.2){
+            entry.target.pause();
+          }
+        });
+      }, { threshold: [0, 0.2] })
+    : null;
+
+  function manageVideo(video){
+    if(managedVideos.has(video)) return;
+    managedVideos.add(video);
+
+    video.addEventListener('play', function(){
+      pauseOtherVideos(video);
+    });
+
+    if(visibilityObserver){
+      visibilityObserver.observe(video);
+    }
+  }
+
+  function manageVideosInside(root){
+    if(root.nodeType !== 1 && root.nodeType !== 9) return;
+    if(root.matches && root.matches('video')) manageVideo(root);
+    root.querySelectorAll('video').forEach(manageVideo);
+  }
+
+  manageVideosInside(document);
+
+  const videoMutationObserver = new MutationObserver(function(mutations){
+    mutations.forEach(function(mutation){
+      mutation.addedNodes.forEach(manageVideosInside);
+    });
+  });
+  videoMutationObserver.observe(document.body, { childList: true, subtree: true });
+
+  function pauseAllVideos(){
+    document.querySelectorAll('video').forEach(function(video){
+      if(!video.paused) video.pause();
+    });
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden) pauseAllVideos();
+  });
+  window.addEventListener('pagehide', pauseAllVideos);
 })();
 
 (function(){
